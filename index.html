@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EX-2</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            overflow: hidden;
+			margin; 0!important;
+		}
+        
+        h1 {
+            position: absolute;
+        }
+        
+        canvas {
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;	
+			background-color: transparent;
+            image-rendering: pixelated;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- <h1 class="text-center">EX-2 flappy player</h1> -->
+
+    <canvas id="canvas">
+        Your browser is outdated.
+    </canvas>
+    <script>
+        function init() {
+            // GLOBAL VARIABLES 
+            // HTML ELEMENTS
+            const canvas = document.getElementById('canvas')
+            const context = canvas.getContext('2d')
+            canvas.width = window.innerWidth
+            canvas.height = window.innerHeight
+            context.imageSmoothingEnable = false
+
+            //SPRITES
+            let canvasX = 0
+            let canvasY = 0
+
+            const playerSprite = new Image()
+            playerSprite.src = 'img/goku.png'
+            let playerSpriteWidth = 64
+            let playerSpriteHeight = 66
+            let playerSpriteX = 0
+            let playerSpriteY = 0
+            let playerHitboxColor = 'lime'
+
+            const fireballSprite = new Image()
+            fireballSprite.src = 'img/fireball.png'
+            let fireballSpriteWidth = 300
+            let fireballSpriteHeight = 280
+            let fireballSpriteX = window.innerWidth / 2
+            let fireballSpriteY = 100
+            let fireballSpriteSpeed = 1.7
+
+
+
+            const pipeSprite = new Image()
+
+            pipeSprite.src = 'img/pipe.png'
+            let pipeSpriteWidth = 138
+            let pipeSpriteHeight = 793
+            let pipeSpriteX = canvas.width
+            let pipeSpriteY = pipeSpriteHeight - (Math.random() * (canvas.height / 2))
+			let pipeSpriteSpeed = 2.7
+
+
+            const backgroundSprite = new Image()
+            backgroundSprite.src = 'img/landscape.gif'
+            let backgroundSpriteWidth = canvas.width
+            let backgroundSpriteHeight = canvas.height
+            let backgroundSpriteX = 0
+            let backgroundSpriteY = 0
+            let backgroundSpriteSpeed = 2.7
+
+            canvas.style.backgroundImage = `url("${backgroundSprite.src}")`
+            canvas.style.backgroundRepeat = 'repeat-x'
+            canvas.style.backgroundSize = 'cover'
+
+            // GAME VARIABLES
+            let gravity = 0
+            let pipesPosition = 0
+
+            // Correct canvas size if resize
+            window.addEventListener('resize', (e) => {
+                setTimeout(() => {
+                    canvas.width = window.innerWidth
+                    canvas.height = window.innerHeight
+                }, 100)
+            })
+
+            // MODELS
+            // player 
+            class Player {
+                constructor() {
+                    this.x = Math.round(canvas.width / 2)
+                    this.y = Math.round(canvas.height / 2)
+                    this.width = playerSpriteWidth
+                    this.height = playerSpriteHeight
+                    console.log(this)
+                }
+
+                draw() {
+
+
+
+                    // correct center
+                    context.translate(-playerSpriteWidth / 2, -playerSpriteHeight / 2)
+
+                    // DONT GO OUT OF CANVAS
+                    if (this.y < 0) {
+                        this.y = 0
+                    }
+
+
+                    //  HITBOX
+                    // context.beginPath()
+                    // context.rect(this.x, this.y, this.width, this.height)
+                    // context.strokeStyle = playerHitboxColor
+                    // context.stroke()
+                    // context.closePath()
+
+                    // DRAW SPRITE
+                    context.drawImage(playerSprite, this.x, this.y, this.width, this.height)
+
+                    // translate context back to original  
+                    context.translate(playerSpriteWidth / 2, playerSpriteHeight / 2)
+
+                }
+
+                gravity() {
+                    if (this.y <= window.innerHeight) {
+                        this.y = this.y + gravity
+                        gravity += 0.7 // 0.3 original
+                    } else {
+                        this.gameOver()
+                    }
+                }
+
+                controls(keyCode) {
+                    switch (keyCode) {
+                        // SPACE
+                        case 32:
+                            this.jump()
+                            break
+
+                            // ENTER
+                        case 13:
+                            init()
+                            break
+
+                            // F
+                        case 70:
+                            this.fire()
+                            break
+
+                            // RIGHT ARROW
+                        case 39:
+                            this.move({
+                                    right: true
+                                })
+                                // RIGHT ARROW
+                        case 39:
+                            this.move({
+                                right: true
+                            })
+                        default:
+                            break
+                    }
+                }
+
+                move(position) {
+                    if (position.right === true) {
+                        console.log('moveright')
+                        backgroundSpriteSpeed += 2
+                    }
+                }
+
+                jump() {
+                    gravity = 1
+                    gravity *= -6.5 // was 5
+
+
+                }
+
+                fire() {
+                    new Fireball()
+                }
+
+                gameOver() {
+                    // BELOW CODE NEED TO BE UNCOMMENT  
+                    // console.log('Game Over')
+                    context.font = "8vw monaco"
+                    context.textAlign = "center"
+                    context.fillStyle = "#fff"
+                    context.fillText('GAME OVER', window.innerWidth / 2, window.innerHeight / 2)
+
+                    cancelAnimationFrame(animationFrame)
+
+                }
+            }
+
+            // PIPES
+            class Pipe {
+                constructor() {
+                    this.x = Math.round(pipeSpriteX)
+                    this.y = Math.round(pipeSpriteY)
+                    this.width = pipeSpriteWidth
+                    this.height = pipeSpriteHeight
+                    console.log(this)
+
+                }
+                draw() {
+                    //  HITBOX
+                    // context.beginPath()
+                    // context.rect(this.x, this.y, this.width, this.height)
+                    // context.strokeStyle = playerHitboxColor
+                    // context.stroke()
+                    // context.closePath()
+
+                    // draw pipe
+                    context.drawImage(pipeSprite, this.x, this.y, this.width, this.height)
+                    this.move()
+                }
+                move() {
+                    this.x -= pipeSpriteSpeed
+                }
+            }
+
+            // FIRE BALL
+            class Fireball {
+                constructor() {
+                    this.x = fireballSpriteX
+                    this.y = fireballSpriteY
+                    this.width = fireballSpriteWidth
+                    this.height = fireballSpriteHeight
+                    this.speed = fireballSpriteSpeed
+                    this.move()
+                    console.log(this)
+                }
+                move() {
+                    while (this.x <= 300) {
+                        this.x += 1
+                        console.log(this)
+                        this.draw()
+                    }
+                }
+                draw() {
+                    context.drawImage(fireballSprite, fireballSpriteX, fireballSpriteY, fireballSpriteWidth, fireballSpriteHeight)
+
+                }
+
+            }
+
+            // INIT GAME
+            function startGame() {
+                let pipe = new Pipe()
+                let player = new Player()
+
+                // SCORE
+                let score = {
+                    points: 0,
+                    scorePositionX: window.innerWidth - 100,
+                    scorePositionY: 50,
+                    color: '#fff',
+                    show: function show() {
+                        context.font = "40px monaco"
+                        context.textAlign = "right"
+
+                        // CHANGE COLOR 
+                        if (this.points === 100) {
+                            this.color = 'lime'
+                        }
+                        context.fillStyle = this.color
+                        context.fillText('' + Math.round(this.points), this.scorePositionX, this.scorePositionY)
+                    }
+                }
+
+                // CONTROLS HANDLER
+                window.addEventListener('keydown', (e) => {
+                    player.controls(e.keyCode)
+                })
+
+                // ANIMATE CONTEXT ELEMENTS
+                function animate() {
+                    // CLEAR CONTEXT
+
+                    context.clearRect(0, 0, canvas.width, canvas.height)
+
+                    // MOVE BACKGROUND
+                    backgroundSpriteX -= backgroundSpriteSpeed
+                    canvas.style.backgroundPositionX = backgroundSpriteX + 'px'
+
+                    // PLACE SCORE
+                    score.show()
+
+                    // PLACE PLAYER
+                    player.draw()
+                    player.gravity()
+
+                    // PLACE PIPE
+                    pipe.draw()
+
+                    // DETECT COLISION 
+
+                    if (player.x < pipe.x + pipe.width &&
+                        player.x + player.width / 2 > pipe.x &&
+                        player.y < pipe.y + pipe.height &&
+                        player.y + player.height / 2 > pipe.y) {
+
+                        // if (player.y >= pipe.y - player.height / 2 &&
+                        //     player.x >= pipe.x - player.width / 2) {
+                        playerHitboxColor = 'orange'
+                            // NEED TO BE UNCOMMENT
+                        player.gameOver()
+
+                    } else {
+                        playerHitboxColor = 'lime'
+                    }
+
+
+                    // ADD POINT TO FIX
+                    // if (pipe.x === player.x) {
+                    //     score.points += 1
+                    // }
+
+                    // GENERATE NEW PIPE AFTER DISAPEARD FROM SCREEN
+                    if (pipe.x <= 0 - pipe.width) {
+                        pipe = new Pipe()
+
+                        // ADD SPEED 
+                        if (pipeSpriteSpeed <= 20) {
+                            pipeSpriteSpeed += 0.7
+                        } 
+
+                        pipeSpriteY = (Math.random() * window.innerHeight / 2) + 300
+                        pipe.draw()
+
+                        score.points += 1
+
+                    }
+
+                    // LAUNCH ANIMATION FRAME
+                    requestAnimationFrame(animate)
+
+                }
+                // INIT ANIMATION FRAME
+                let animationFrame = requestAnimationFrame(animate)
+            }
+
+            startGame()
+        }
+
+
+        window.document.onload = init()
+    </script>
+</body>
+
+</html>
+
